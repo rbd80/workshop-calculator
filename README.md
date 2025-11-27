@@ -70,6 +70,24 @@ The application is being refactored from a monolithic inline script to a modular
 - `src/chart-management.js` - Chart visualization
 - `src/app.js` - Main application controller
 
+## Password Protection
+
+This project includes password protection using [StaticCrypt](https://github.com/robinmoisson/staticrypt).
+
+### Generate Protected Version
+
+```bash
+npm run protect
+```
+
+This creates `index-protected.html` with password: `workshop2024`
+
+See [PASSWORD-PROTECTION.md](PASSWORD-PROTECTION.md) for detailed instructions.
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for GitHub Pages deployment instructions.
+
 ## Requirements
 
 - Node.js 18+ (for Vitest)
