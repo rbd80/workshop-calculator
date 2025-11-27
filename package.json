@@ -8,7 +8,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "protect": "npx staticrypt index.html -p workshop2024 --short --template-title 'Workshop Financial Calculator' --template-instructions 'Enter password to access the calculator' --template-color-primary '#f59e0b' --template-color-secondary '#18181b' && mv encrypted/index.html index-protected.html && rmdir encrypted"
+    "protect": "npx staticrypt index-unprotected.html -p workshop2024 --short --template-title 'Workshop Financial Calculator' --template-instructions 'Enter password to access the calculator' --template-color-primary '#f59e0b' --template-color-secondary '#18181b' && mv encrypted/index-unprotected.html index.html && rmdir encrypted"
   },
   "keywords": [
     "financial",
