@@ -16,11 +16,11 @@ export function arbPrice() {
 }
 
 /**
- * Generates valid enrollment values (1-8)
+ * Generates valid enrollment values (1-20)
  * @returns {fc.Arbitrary<number>} Enrollment arbitrary
  */
 export function arbEnrollment() {
-  return fc.integer({ min: 1, max: 8 });
+  return fc.integer({ min: 1, max: 20 });
 }
 
 /**
@@ -114,11 +114,11 @@ export function arbMargin() {
 }
 
 /**
- * Generates enrollment points for chart data (0, 2, 4, 6, 8)
+ * Generates enrollment points for chart data (0, 5, 10, 15, 20)
  * @returns {fc.Arbitrary<Array<number>>} Enrollment points
  */
 export function arbEnrollmentPoints() {
-  return fc.constant([0, 2, 4, 6, 8]);
+  return fc.constant([0, 5, 10, 15, 20]);
 }
 
 /**
