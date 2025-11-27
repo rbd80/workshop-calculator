@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workshop Financial Model</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background-color: #18181b;
+color: #f4f4f5;
+}
+h1, h2, h3, .serif {
+font-family: 'Playfair Display', serif;
+}
+.chart-container {
+position: relative;
+width: 100%;
+max-width: 600px;
+height: 300px;
+margin: 0 auto;
+}
+@media (min-width: 768px) {
+.chart-container {
+height: 350px;
+}
+}
+input[type=range]::-webkit-slider-thumb {
+-webkit-appearance: none;
+appearance: none;
+width: 16px;
+height: 16px;
+background: #f59e0b;
+cursor: pointer;
+border-radius: 50%;
+}
+input[type=range]::-moz-range-thumb {
+width: 16px;
+height: 16px;
+background: #f59e0b;
+cursor: pointer;
+border-radius: 50%;
+border: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+height: 8px;
+background: #3f3f46;
+border-radius: 4px;
+}
+input[type=range]::-moz-range-track {
+height: 8px;
+background: #3f3f46;
+border-radius: 4px;
+}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Header -->
+<header class="border-b border-zinc-800 bg-zinc-900 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<h1 class="text-2xl font-bold tracking-wide serif">FINANCIAL <span class="font-light text-amber-500">| Profit Modeler</span></h1>
+<button id="toggle-scenarios" class="px-4 py-2 bg-amber-500 text-zinc-900 rounded-lg font-medium hover:bg-amber-400 transition-colors">
+Scenarios
+</button>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<h2 class="text-4xl serif text-white mb-6">Workshop Profit Simulator</h2>
+<p class="text-zinc-400 mb-8 max-w-3xl">
+Adjust the sliders below to model the impact of pricing, enrollment, and core expenses on your overall profitability and break-even point for the 2-Day D.C. Workshop.
+</p>
+
+<!-- Scenario Management Panel (Hidden by default) -->
+<div id="scenario-panel" class="hidden mb-8 bg-zinc-800 p-6 rounded-xl border border-zinc-700">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-bold text-amber-500">Scenario Management</h3>
+<button id="close-scenarios" class="text-zinc-400 hover:text-white">✕</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Save Scenario -->
+<div class="space-y-3">
+<h4 class="text-md font-bold text-zinc-300">Save Current Scenario</h4>
+<div class="flex gap-2">
+<input type="text" id="scenario-name" placeholder="e.g., Premium Pricing" class="flex-1 bg-zinc-700 rounded-lg p-2 text-zinc-100 border border-zinc-600">
+<button id="save-scenario" class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 transition-colors">
+Save
+</button>
+</div>
+</div>
+<!-- Saved Scenarios List -->
+<div class="space-y-3">
+<h4 class="text-md font-bold text-zinc-300">Saved Scenarios</h4>
+<div id="scenarios-list" class="space-y-2 max-h-64 overflow-y-auto">
+<p class="text-sm text-zinc-500 italic">No saved scenarios yet</p>
+</div>
+</div>
+</div>
+<!-- Scenario Comparison -->
+<div id="comparison-section" class="hidden mt-6 pt-6 border-t border-zinc-700">
+<h4 class="text-md font-bold text-zinc-300 mb-4">Scenario Comparison</h4>
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead class="text-zinc-400 border-b border-zinc-700">
+<tr>
+<th class="text-left p-2">Metric</th>
+<th class="text-right p-2" id="compare-col-1">Current</th>
+<th class="text-right p-2" id="compare-col-2">-</th>
+</tr>
+</thead>
+<tbody id="comparison-body" class="text-zinc-300">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Column 1: Inputs -->
+<div class="lg:col-span-1 space-y-8 bg-zinc-800 p-6 rounded-xl border border-zinc-700 h-full">
+<h3 class="text-xl font-bold text-amber-500 border-b border-zinc-700 pb-3">Input Variables</h3>
+
+<!-- Price Input -->
+<div class="space-y-2">
+<label for="price" class="block text-sm font-medium text-zinc-300">Student Price: $<span id="price-display">1500</span></label>
+<input type="range" id="price" min="500" max="3000" step="50" value="1500" class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
+</div>
+
+<!-- Enrollment Input -->
+<div class="space-y-2">
+<label for="enrollment" class="block text-sm font-medium text-zinc-300">Current Enrollment: <span id="enrollment-display">8</span> Students (Max 8)</label>
+<input type="range" id="enrollment" min="1" max="8" step="1" value="8" class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
+</div>
+
+<div class="space-y-4">
+<div class="flex items-center justify-between border-b border-zinc-700 pb-2">
+<h4 class="text-md font-bold text-zinc-300">Fixed Costs (Per Workshop)</h4>
+<button id="add-fixed-cost" class="px-2 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-500" title="Add Fixed Cost">
++ Add
+</button>
+</div>
+<div id="fixed-costs-container" class="text-sm text-zinc-400 space-y-2">
+<!-- Dynamic fixed costs will be inserted here -->
+</div>
+</div>
+
+<div class="space-y-4">
+<div class="flex items-center justify-between border-b border-zinc-700 pb-2">
+<h4 class="text-md font-bold text-zinc-300">Variable Costs (Per Student)</h4>
+<button id="add-variable-cost" class="px-2 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-500" title="Add Variable Cost">
++ Add
+</button>
+</div>
+<div id="variable-costs-container" class="text-sm text-zinc-400 space-y-2">
+<!-- Dynamic variable costs will be inserted here -->
+</div>
+</div>
+</div>
+
+<!-- Column 2 & 3: Outputs and Visualizations -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Key Metrics -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+<div class="p-4 bg-zinc-700 rounded-xl border border-zinc-600 text-center">
+<span class="block text-xs uppercase text-zinc-400 font-medium">Total Revenue</span>
+<span id="output-revenue" class="block text-2xl font-bold mt-1 text-white">$0</span>
+</div>
+<div class="p-4 bg-zinc-700 rounded-xl border border-zinc-600 text-center">
+<span class="block text-xs uppercase text-zinc-400 font-medium">Total Costs</span>
+<span id="output-costs" class="block text-2xl font-bold mt-1 text-white">$0</span>
+</div>
+<div class="p-4 rounded-xl border border-zinc-600 text-center" id="profit-card">
+<span class="block text-xs uppercase text-zinc-400 font-medium">Net Profit / (Loss)</span>
+<span id="output-profit" class="block text-2xl font-bold mt-1 text-green-400">$0</span>
+</div>
+<div class="p-4 bg-zinc-700 rounded-xl border border-zinc-600 text-center">
+<span class="block text-xs uppercase text-zinc-400 font-medium">Profit Margin</span>
+<span id="output-margin" class="block text-2xl font-bold mt-1 text-amber-400">0%</span>
+</div>
+<div class="p-4 bg-zinc-700 rounded-xl border border-zinc-600 text-center">
+<span class="block text-xs uppercase text-zinc-400 font-medium">Break-Even Point</span>
+<span id="output-break-even" class="block text-2xl font-bold mt-1 text-amber-400">0.0 Students</span>
+</div>
+</div>
+
+<!-- Visualization 1: Cost vs. Revenue -->
+<div class="bg-zinc-800 p-6 rounded-xl border border-zinc-700">
+<h3 class="text-lg font-bold text-white mb-4">Cost vs. Revenue Analysis (At Current Enrollment)</h3>
+<div class="chart-container">
+<canvas id="costRevenueChart"></canvas>
+</div>
+</div>
+
+<!-- Visualization 2: Profit Breakdown -->
+<div class="bg-zinc-800 p-6 rounded-xl border border-zinc-700">
+<h3 class="text-lg font-bold text-white mb-4">Total Cost Breakdown</h3>
+<div class="chart-container">
+<canvas id="costBreakdownChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+<script>
+// Chart References
+let costRevenueChart, costBreakdownChart;
+
+// Scenario Management
+let scenarios = [];
+
+// Fixed Costs Management
+let fixedCosts = [
+    { id: 1, name: 'Studio Rental (2 Days)', cost: 1500 },
+    { id: 2, name: 'Instructor Fee/Planning', cost: 2000 },
+    { id: 3, name: 'Marketing/Ad Spend', cost: 300 }
+];
+let nextFixedCostId = 4;
+
+// Variable Costs Management
+let variableCosts = [
+    { id: 1, name: 'Model Fee Allocation', cost: 150 },
+    { id: 2, name: 'Catering/Refreshments', cost: 100 },
+    { id: 3, name: 'Materials/Swag', cost: 50 }
+];
+let nextVariableCostId = 4;
+
+function loadScenarios() {
+const saved = localStorage.getItem('workshop-scenarios');
+scenarios = saved ? JSON.parse(saved) : [];
+renderScenariosList();
+}
+
+function saveScenario() {
+const name = document.getElementById('scenario-name').value.trim();
+if (!name) {
+alert('Please enter a scenario name');
+return;
+}
+const data = calculateFinancials();
+const scenario = {
+id: Date.now(),
+name: name,
+timestamp: new Date().toISOString(),
+inputs: {
+price: data.price,
+enrollment: data.enrollment,
+fixedCosts: JSON.parse(JSON.stringify(fixedCosts)), // Deep copy
+variableCosts: JSON.parse(JSON.stringify(variableCosts)) // Deep copy
+},
+outputs: {
+revenue: data.totalRevenue,
+costs: data.totalCosts,
+profit: data.netProfit,
+margin: data.profitMargin,
+breakEven: data.breakEvenPoint
+}
+};
+scenarios.push(scenario);
+localStorage.setItem('workshop-scenarios', JSON.stringify(scenarios));
+document.getElementById('scenario-name').value = '';
+renderScenariosList();
+}
+
+function loadScenarioInputs(scenario) {
+document.getElementById('price').value = scenario.inputs.price;
+document.getElementById('enrollment').value = scenario.inputs.enrollment;
+
+// Restore fixed costs
+if (scenario.inputs.fixedCosts) {
+fixedCosts = JSON.parse(JSON.stringify(scenario.inputs.fixedCosts));
+const maxFixedId = Math.max(...fixedCosts.map(fc => fc.id), 0);
+nextFixedCostId = maxFixedId + 1;
+renderFixedCosts();
+}
+
+// Restore variable costs
+if (scenario.inputs.variableCosts) {
+variableCosts = JSON.parse(JSON.stringify(scenario.inputs.variableCosts));
+const maxVarId = Math.max(...variableCosts.map(vc => vc.id), 0);
+nextVariableCostId = maxVarId + 1;
+renderVariableCosts();
+}
+
+handleInput();
+}
+
+function deleteScenario(id) {
+if (confirm('Delete this scenario?')) {
+scenarios = scenarios.filter(s => s.id !== id);
+localStorage.setItem('workshop-scenarios', JSON.stringify(scenarios));
+renderScenariosList();
+}
+}
+
+function compareScenario(scenario) {
+const current = calculateFinancials();
+document.getElementById('compare-col-1').textContent = 'Current';
+document.getElementById('compare-col-2').textContent = scenario.name;
+
+const metrics = [
+{ label: 'Price', current: `$${current.price.toLocaleString()}`, scenario: `$${scenario.inputs.price.toLocaleString()}` },
+{ label: 'Enrollment', current: current.enrollment, scenario: scenario.inputs.enrollment },
+{ label: 'Revenue', current: `$${current.totalRevenue.toLocaleString()}`, scenario: `$${scenario.outputs.revenue.toLocaleString()}` },
+{ label: 'Costs', current: `$${current.totalCosts.toLocaleString()}`, scenario: `$${scenario.outputs.costs.toLocaleString()}` },
+{ label: 'Net Profit', current: `$${current.netProfit.toLocaleString()}`, scenario: `$${scenario.outputs.profit.toLocaleString()}` },
+{ label: 'Profit Margin', current: `${current.profitMargin.toFixed(1)}%`, scenario: `${scenario.outputs.margin.toFixed(1)}%` },
+{ label: 'Break-Even', current: current.breakEvenPoint === Infinity ? 'Impossible' : `${Math.ceil(current.breakEvenPoint)} students`, scenario: scenario.outputs.breakEven === Infinity ? 'Impossible' : `${Math.ceil(scenario.outputs.breakEven)} students` }
+];
+
+const tbody = document.getElementById('comparison-body');
+tbody.innerHTML = metrics.map(m => `
+<tr class="border-b border-zinc-700">
+<td class="p-2 font-medium">${m.label}</td>
+<td class="p-2 text-right">${m.current}</td>
+<td class="p-2 text-right">${m.scenario}</td>
+</tr>
+`).join('');
+
+document.getElementById('comparison-section').classList.remove('hidden');
+}
+
+function renderScenariosList() {
+const list = document.getElementById('scenarios-list');
+if (scenarios.length === 0) {
+list.innerHTML = '<p class="text-sm text-zinc-500 italic">No saved scenarios yet</p>';
+return;
+}
+list.innerHTML = scenarios.map(s => `
+<div class="bg-zinc-700 p-3 rounded-lg border border-zinc-600">
+<div class="flex items-start justify-between mb-2">
+<div class="flex-1">
+<h5 class="font-medium text-white">${s.name}</h5>
+<p class="text-xs text-zinc-400">${new Date(s.timestamp).toLocaleDateString()}</p>
+</div>
+<div class="flex gap-1">
+<button onclick="compareScenario(${JSON.stringify(s).replace(/"/g, '&quot;')})" class="px-2 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-500" title="Compare">
+⚖
+</button>
+<button onclick="loadScenarioInputs(${JSON.stringify(s).replace(/"/g, '&quot;')})" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-500" title="Load">
+↻
+</button>
+<button onclick="deleteScenario(${s.id})" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-500" title="Delete">
+✕
+</button>
+</div>
+</div>
+<div class="text-xs text-zinc-400 space-y-1">
+<p>Profit: <span class="${s.outputs.profit >= 0 ? 'text-green-400' : 'text-red-400'}">$${s.outputs.profit.toLocaleString()}</span> (${s.outputs.margin.toFixed(1)}%)</p>
+<p>Price: $${s.inputs.price.toLocaleString()} × ${s.inputs.enrollment} students</p>
+</div>
+</div>
+`).join('');
+}
+
+// Variable Costs Management
+function renderVariableCosts() {
+const container = document.getElementById('variable-costs-container');
+container.innerHTML = variableCosts.map(vc => `
+<div class="flex items-center gap-2 p-2 bg-zinc-700/50 rounded border border-zinc-600">
+<input type="text" 
+       value="${vc.name}" 
+       onchange="updateVariableCostName(${vc.id}, this.value)"
+       class="flex-1 bg-zinc-700 rounded-md p-1 text-zinc-100 border border-zinc-600 text-sm">
+<span class="text-zinc-400">$</span>
+<input type="number" 
+       value="${vc.cost}" 
+       min="0" 
+       step="5"
+       onchange="updateVariableCostAmount(${vc.id}, this.value)"
+       class="w-20 bg-zinc-700 rounded-md p-1 text-zinc-100 border border-zinc-600 text-right text-sm">
+<button onclick="removeVariableCost(${vc.id})" 
+        class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-500"
+        title="Remove">
+    ✕
+</button>
+</div>
+`).join('');
+}
+
+function addVariableCost() {
+const name = prompt('Enter variable cost name:', 'New Cost Item');
+if (!name || !name.trim()) return;
+const cost = parseFloat(prompt('Enter cost per student:', '0'));
+if (isNaN(cost) || cost < 0) return;
+variableCosts.push({
+id: nextVariableCostId++,
+name: name.trim(),
+cost: cost
+});
+renderVariableCosts();
+handleInput();
+}
+
+function removeVariableCost(id) {
+if (variableCosts.length === 1) {
+alert('You must have at least one variable cost item.');
+return;
+}
+variableCosts = variableCosts.filter(vc => vc.id !== id);
+renderVariableCosts();
+handleInput();
+}
+
+function updateVariableCostName(id, name) {
+const vc = variableCosts.find(v => v.id === id);
+if (vc) {
+vc.name = name;
+handleInput();
+}
+}
+
+function updateVariableCostAmount(id, amount) {
+const vc = variableCosts.find(v => v.id === id);
+if (vc) {
+vc.cost = Math.max(0, parseFloat(amount) || 0);
+handleInput();
+}
+}
+
+// Fixed Costs Management
+function renderFixedCosts() {
+const container = document.getElementById('fixed-costs-container');
+container.innerHTML = fixedCosts.map(fc => `
+<div class="flex items-center gap-2 p-2 bg-zinc-700/50 rounded border border-zinc-600">
+<input type="text" 
+       value="${fc.name}" 
+       onchange="updateFixedCostName(${fc.id}, this.value)"
+       class="flex-1 bg-zinc-700 rounded-md p-1 text-zinc-100 border border-zinc-600 text-sm">
+<span class="text-zinc-400">$</span>
+<input type="number" 
+       value="${fc.cost}" 
+       min="0" 
+       step="10"
+       onchange="updateFixedCostAmount(${fc.id}, this.value)"
+       class="w-24 bg-zinc-700 rounded-md p-1 text-zinc-100 border border-zinc-600 text-right text-sm">
+<button onclick="removeFixedCost(${fc.id})" 
+        class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-500"
+        title="Remove">
+    ✕
+</button>
+</div>
+`).join('');
+}
+
+function addFixedCost() {
+const name = prompt('Enter fixed cost name:', 'New Fixed Cost');
+if (!name || !name.trim()) return;
+const cost = parseFloat(prompt('Enter total cost:', '0'));
+if (isNaN(cost) || cost < 0) return;
+fixedCosts.push({
+id: nextFixedCostId++,
+name: name.trim(),
+cost: cost
+});
+renderFixedCosts();
+handleInput();
+}
+
+function removeFixedCost(id) {
+if (fixedCosts.length === 1) {
+alert('You must have at least one fixed cost item.');
+return;
+}
+fixedCosts = fixedCosts.filter(fc => fc.id !== id);
+renderFixedCosts();
+handleInput();
+}
+
+function updateFixedCostName(id, name) {
+const fc = fixedCosts.find(f => f.id === id);
+if (fc) {
+fc.name = name;
+handleInput();
+}
+}
+
+function updateFixedCostAmount(id, amount) {
+const fc = fixedCosts.find(f => f.id === id);
+if (fc) {
+fc.cost = Math.max(0, parseFloat(amount) || 0);
+handleInput();
+}
+}
+
+// Financial Calculations
+function calculateFinancials() {
+const price = parseFloat(document.getElementById('price').value) || 0;
+const enrollment = parseFloat(document.getElementById('enrollment').value) || 0;
+
+// Calculate total fixed cost from dynamic array
+const totalFixedCost = fixedCosts.reduce((sum, fc) => sum + fc.cost, 0);
+
+// Calculate total variable cost per student from dynamic array
+const variableCostPerStudent = variableCosts.reduce((sum, vc) => sum + vc.cost, 0);
+const totalVariableCost = variableCostPerStudent * enrollment;
+const totalCosts = totalFixedCost + totalVariableCost;
+const totalRevenue = price * enrollment;
+const netProfit = totalRevenue - totalCosts;
+const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+let breakEvenPoint = 0;
+if (price > variableCostPerStudent) {
+breakEvenPoint = totalFixedCost / (price - variableCostPerStudent);
+} else if (totalFixedCost > 0) {
+breakEvenPoint = Infinity;
+}
+
+// Build breakdown including all fixed and variable costs
+const breakdown = {
+fixed: totalFixedCost
+};
+// Add each fixed cost to breakdown
+fixedCosts.forEach(fc => {
+breakdown[fc.name] = fc.cost;
+});
+// Add each variable cost to breakdown
+variableCosts.forEach(vc => {
+breakdown[vc.name] = vc.cost * enrollment;
+});
+
+return {
+price, enrollment, totalFixedCost, variableCostPerStudent,
+totalCosts, totalRevenue, netProfit, profitMargin, breakEvenPoint,
+breakdown
+};
+}
+
+// UI Updates
+function updateUI(data) {
+document.getElementById('price-display').textContent = data.price.toLocaleString('en-US');
+document.getElementById('enrollment-display').textContent = data.enrollment;
+document.getElementById('output-revenue').textContent = `$${data.totalRevenue.toLocaleString('en-US')}`;
+document.getElementById('output-costs').textContent = `$${data.totalCosts.toLocaleString('en-US')}`;
+
+// Profit Update
+const profitEl = document.getElementById('output-profit');
+const profitCard = document.getElementById('profit-card');
+profitEl.textContent = `$${data.netProfit.toLocaleString('en-US', { signDisplay: 'always' })}`;
+profitEl.classList.remove('text-green-400', 'text-red-400');
+profitCard.classList.remove('bg-green-800/20', 'bg-red-800/20');
+if (data.netProfit >= 0) {
+profitEl.classList.add('text-green-400');
+profitCard.classList.add('bg-green-800/20');
+} else {
+profitEl.classList.add('text-red-400');
+profitCard.classList.add('bg-red-800/20');
+}
+
+// Profit Margin Update
+const marginEl = document.getElementById('output-margin');
+marginEl.textContent = `${data.profitMargin.toFixed(1)}%`;
+marginEl.classList.remove('text-green-400', 'text-red-400', 'text-amber-400');
+if (data.profitMargin >= 20) {
+marginEl.classList.add('text-green-400');
+} else if (data.profitMargin >= 0) {
+marginEl.classList.add('text-amber-400');
+} else {
+marginEl.classList.add('text-red-400');
+}
+
+// Break-Even Update
+const bepDisplay = data.breakEvenPoint === Infinity
+? 'Impossible'
+: `${Math.ceil(data.breakEvenPoint)} Students`;
+document.getElementById('output-break-even').textContent = bepDisplay;
+
+updateCostRevenueChart(data);
+updateCostBreakdownChart(data);
+}
+
+// Chart Functions
+function initCostRevenueChart(data) {
+const ctx = document.getElementById('costRevenueChart').getContext('2d');
+costRevenueChart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: [0, 2, 4, 6, 8],
+datasets: [
+{
+label: 'Total Costs',
+data: [],
+borderColor: '#a1a1aa',
+backgroundColor: 'transparent',
+tension: 0.2,
+pointRadius: 4,
+pointBackgroundColor: '#a1a1aa'
+},
+{
+label: 'Total Revenue',
+data: [],
+borderColor: '#f59e0b',
+backgroundColor: 'transparent',
+tension: 0.2,
+pointRadius: 4,
+pointBackgroundColor: '#f59e0b'
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { labels: { color: '#a1a1aa', usePointStyle: true } },
+tooltip: {
+callbacks: {
+label: (context) => `${context.dataset.label}: $${context.parsed.y.toLocaleString('en-US')}`
+}
+}
+},
+scales: {
+x: {
+title: { display: true, text: 'Enrollment', color: '#a1a1aa' },
+ticks: { color: '#a1a1aa' },
+grid: { color: '#3f3f46' }
+},
+y: {
+title: { display: true, text: 'Amount ($)', color: '#a1a1aa' },
+ticks: { color: '#a1a1aa', callback: (value) => `$${value.toLocaleString('en-US')}` },
+grid: { color: '#3f3f46' }
+}
+}
+}
+});
+}
+
+function updateCostRevenueChart(data) {
+if (!costRevenueChart) return;
+const maxEnrollment = 8;
+const enrollmentPoints = Array.from({ length: maxEnrollment / 2 + 1 }, (_, i) => i * 2);
+const costData = enrollmentPoints.map(e => data.totalFixedCost + (data.variableCostPerStudent * e));
+const revenueData = enrollmentPoints.map(e => data.price * e);
+costRevenueChart.data.datasets[0].data = costData;
+costRevenueChart.data.datasets[1].data = revenueData;
+costRevenueChart.update();
+}
+
+function initCostBreakdownChart(data) {
+const ctx = document.getElementById('costBreakdownChart').getContext('2d');
+costBreakdownChart = new Chart(ctx, {
+type: 'bar',
+data: {
+labels: [],
+datasets: [{
+label: 'Cost Allocation',
+data: [],
+backgroundColor: [],
+hoverBackgroundColor: []
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { display: false },
+tooltip: {
+callbacks: {
+label: (context) => `${context.label}: $${context.parsed.y.toLocaleString('en-US')}`
+}
+}
+},
+scales: {
+x: {
+ticks: { color: '#a1a1aa' },
+grid: { display: false }
+},
+y: {
+title: { display: true, text: 'Amount ($)', color: '#a1a1aa' },
+ticks: { color: '#a1a1aa', callback: (value) => `$${value.toLocaleString('en-US')}` },
+grid: { color: '#3f3f46' }
+}
+}
+}
+});
+}
+
+function updateCostBreakdownChart(data) {
+if (!costBreakdownChart) return;
+
+// Build labels and data arrays from breakdown
+const labels = ['Fixed Costs'];
+const chartData = [data.breakdown.fixed];
+const colors = ['#52525b']; // zinc-600 for fixed
+const hoverColors = ['#6b7280']; // zinc-500 for hover
+
+// Color palette for variable costs
+const variableColors = ['#f59e0b', '#71717a', '#a1a1aa', '#d97706', '#9ca3af', '#fbbf24'];
+let colorIndex = 0;
+
+variableCosts.forEach(vc => {
+labels.push(vc.name);
+chartData.push(data.breakdown[vc.name] || 0);
+colors.push(variableColors[colorIndex % variableColors.length]);
+hoverColors.push(variableColors[colorIndex % variableColors.length]);
+colorIndex++;
+});
+
+costBreakdownChart.data.labels = labels;
+costBreakdownChart.data.datasets[0].data = chartData;
+costBreakdownChart.data.datasets[0].backgroundColor = colors;
+costBreakdownChart.data.datasets[0].hoverBackgroundColor = hoverColors;
+costBreakdownChart.update();
+}
+
+// Event Listeners
+function handleInput() {
+const data = calculateFinancials();
+updateUI(data);
+}
+
+function initialize() {
+loadScenarios();
+renderFixedCosts();
+renderVariableCosts();
+const data = calculateFinancials();
+initCostRevenueChart(data);
+initCostBreakdownChart(data);
+updateUI(data);
+const inputs = document.querySelectorAll('input[type="range"], input[type="number"]');
+inputs.forEach(input => {
+input.addEventListener('input', handleInput);
+});
+
+// Scenario panel toggles
+document.getElementById('toggle-scenarios').addEventListener('click', () => {
+document.getElementById('scenario-panel').classList.toggle('hidden');
+});
+document.getElementById('close-scenarios').addEventListener('click', () => {
+document.getElementById('scenario-panel').classList.add('hidden');
+});
+document.getElementById('save-scenario').addEventListener('click', saveScenario);
+document.getElementById('scenario-name').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') saveScenario();
+});
+
+// Cost management buttons
+document.getElementById('add-fixed-cost').addEventListener('click', addFixedCost);
+document.getElementById('add-variable-cost').addEventListener('click', addVariableCost);
+}
+
+window.onload = initialize;
+</script>
+
+</body>
+</html>
