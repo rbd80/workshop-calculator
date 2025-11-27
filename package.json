@@ -9,13 +9,17 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },
-  "keywords": ["financial", "calculator", "workshop"],
+  "keywords": [
+    "financial",
+    "calculator",
+    "workshop"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@vitest/ui": "^1.0.0",
+    "@vitest/ui": "^4.0.14",
     "fast-check": "^3.15.0",
-    "happy-dom": "^12.10.3",
-    "vitest": "^1.0.0"
+    "happy-dom": "^20.0.10",
+    "vitest": "^4.0.14"
   }
 }
