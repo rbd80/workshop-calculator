@@ -135,8 +135,8 @@ Save
 
 <!-- Enrollment Input -->
 <div class="space-y-2">
-<label for="enrollment" class="block text-sm font-medium text-zinc-300">Current Enrollment: <span id="enrollment-display">8</span> Students (Max 8)</label>
-<input type="range" id="enrollment" min="1" max="8" step="1" value="8" class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
+<label for="enrollment" class="block text-sm font-medium text-zinc-300">Current Enrollment: <span id="enrollment-display">8</span> Students (Max 20)</label>
+<input type="range" id="enrollment" min="1" max="20" step="1" value="8" class="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer">
 </div>
 
 <div class="space-y-4">
@@ -582,7 +582,7 @@ const ctx = document.getElementById('costRevenueChart').getContext('2d');
 costRevenueChart = new Chart(ctx, {
 type: 'line',
 data: {
-labels: [0, 2, 4, 6, 8],
+labels: [0, 5, 10, 15, 20],
 datasets: [
 {
 label: 'Total Costs',
@@ -633,8 +633,8 @@ grid: { color: '#3f3f46' }
 
 function updateCostRevenueChart(data) {
 if (!costRevenueChart) return;
-const maxEnrollment = 8;
-const enrollmentPoints = Array.from({ length: maxEnrollment / 2 + 1 }, (_, i) => i * 2);
+const maxEnrollment = 20;
+const enrollmentPoints = Array.from({ length: maxEnrollment / 5 + 1 }, (_, i) => i * 5);
 const costData = enrollmentPoints.map(e => data.totalFixedCost + (data.variableCostPerStudent * e));
 const revenueData = enrollmentPoints.map(e => data.price * e);
 costRevenueChart.data.datasets[0].data = costData;
